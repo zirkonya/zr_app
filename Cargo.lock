@@ -139,6 +139,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "toml",
+ "zr_app_macros",
 ]
 
 [[package]]
