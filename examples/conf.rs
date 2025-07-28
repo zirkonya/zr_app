@@ -2,7 +2,7 @@ use zr_app::config_builder;
 
 config_builder! {
     App {
-        title: String,
+        title: String = "Title",
         foo: Foo {
             value: i32,
         }

@@ -1,10 +1,10 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Attribute, Ident, Token, parse::Parse, parse_quote, token::Brace};
+use syn::{Attribute, Ident, Lit, Token, parse::Parse, parse_quote, token::Brace};
 
 #[derive(Clone)]
 pub(super) enum FieldType {
-    Simple(Ident),
+    Simple((Ident, Option<Lit>)),
     Nested {
         struct_name: Ident,
         fields: Vec<Field>,
@@ -34,10 +34,12 @@ impl Parse for FieldType {
             let mut fields = Vec::new();
             while !content.is_empty() {
                 let field = content.parse::<Field>()?;
-                fields.push(field);
+
                 if !content.is_empty() {
                     content.parse::<Token![,]>()?;
-                }
+                };
+
+                fields.push(field);
             }
 
             return Ok(FieldType::Nested {
@@ -45,7 +47,14 @@ impl Parse for FieldType {
                 fields,
             });
         }
-        Ok(FieldType::Simple(ident))
+
+        let default = if input.peek(Token![=]) {
+            input.parse::<Token![=]>()?;
+            Some(input.parse::<Lit>()?)
+        } else {
+            None
+        };
+        Ok(FieldType::Simple((ident, default)))
     }
 }
 
@@ -69,7 +78,11 @@ impl Parse for StructDef {
             let field: Field = content.parse()?;
             fields.push(field);
             if !content.is_empty() {
-                content.parse::<Token![,]>()?;
+                if content.peek(Token![,]) {
+                    content.parse::<Token![,]>()?;
+                } else {
+                    content.parse::<Token![=]>()?;
+                }
             }
         }
 
@@ -105,7 +118,7 @@ fn collect_nested_structs(fields: &[Field], nested_structs: &mut Vec<StructDef>)
         } = &field.field_type
         {
             let nested_struct = StructDef {
-                attr: Some(parse_quote!(#[derive(Default, serde::Serialize, serde::Deserialize)])),
+                attr: Some(parse_quote!(#[derive(serde::Serialize, serde::Deserialize)])),
                 name: struct_name.clone(),
                 fields: nested_fields.clone(),
             };
@@ -119,19 +132,27 @@ fn generate_struct_tokens(struct_def: &StructDef) -> TokenStream {
     let struct_name = &struct_def.name;
     let attr = &struct_def.attr;
     let mut field_tokens = Vec::new();
-
+    let mut default_tokens = Vec::new();
     for field in &struct_def.fields {
         let field_name = &field.name;
 
         match &field.field_type {
-            FieldType::Simple(ty) => {
+            FieldType::Simple((ty, default)) => {
                 field_tokens.push(quote! {
                     pub #field_name: #ty
+                });
+                default_tokens.push(if let Some(lit) = default {
+                    quote! { #field_name: #lit.into() }
+                } else {
+                    quote! { #field_name: std::default::Default::default() }
                 });
             }
             FieldType::Nested { struct_name, .. } => {
                 field_tokens.push(quote! {
                     pub #field_name: #struct_name
+                });
+                default_tokens.push(quote! {
+                    #field_name: std::default::Default::default()
                 });
             }
         }
@@ -141,6 +162,14 @@ fn generate_struct_tokens(struct_def: &StructDef) -> TokenStream {
         #attr
         pub struct #struct_name {
             #(#field_tokens),*
+        }
+
+        impl std::default::Default for #struct_name {
+            fn default() -> Self {
+                Self {
+                    #(#default_tokens),*
+                }
+            }
         }
     }
 }
