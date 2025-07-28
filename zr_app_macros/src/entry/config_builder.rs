@@ -78,11 +78,7 @@ impl Parse for StructDef {
             let field: Field = content.parse()?;
             fields.push(field);
             if !content.is_empty() {
-                if content.peek(Token![,]) {
-                    content.parse::<Token![,]>()?;
-                } else {
-                    content.parse::<Token![=]>()?;
-                }
+                content.parse::<Token![,]>()?;
             }
         }
 
