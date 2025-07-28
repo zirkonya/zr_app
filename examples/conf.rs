@@ -1,4 +1,3 @@
-use zr_app::config::get_config;
 use zr_app::config_builder;
 
 config_builder! {
@@ -10,7 +9,7 @@ config_builder! {
     }
 }
 
+#[zr_app::app(conf = App, app_folder = "./examples/conf")]
 fn main() {
-    let app: App = get_config("file.conf");
-    println!("title: {}; value: {}", app.title, app.foo.value);
+    println!("title: {}; value: {}", config.title, config.foo.value);
 }

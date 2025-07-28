@@ -18,5 +18,12 @@ pub fn config(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn config_builder(input: TokenStream) -> TokenStream {
-    entry::config_builder(input.into())
+    entry::config_builder(input)
+}
+
+#[proc_macro_attribute]
+pub fn app(attr: TokenStream, input: TokenStream) -> TokenStream {
+    let a = entry::app(attr, input);
+    println!("{a}");
+    a
 }
