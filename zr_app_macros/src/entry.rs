@@ -22,13 +22,17 @@ pub(crate) fn config_builder(input: TokenStream) -> TokenStream {
 pub(crate) fn app(attr: TokenStream, input: TokenStream) -> TokenStream {
     let AppAttributes { conf, app_folder } = parse_macro_input!(attr as AppAttributes);
     let ItemFn {
-        vis, sig, block, ..
+        attrs,
+        vis,
+        sig,
+        block,
     } = syn::parse_macro_input!(input as ItemFn);
     let conf_file = format!(
         "{}/config.conf",
         app_folder.clone().unwrap_or(String::from("."))
     );
     quote! {
+        #(#attrs)*
         #vis #sig {
             std::fs::create_dir_all(#app_folder).unwrap();
             let config: #conf = zr_app::config::get_config(#conf_file);
