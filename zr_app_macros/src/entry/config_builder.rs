@@ -92,7 +92,7 @@ pub(super) fn generate_structs(struct_def: &StructDef) -> TokenStream {
         generated.extend(nested_tokens);
     }
 
-    let main_struct = generate_struct_tokens(&struct_def);
+    let main_struct = generate_struct_tokens(struct_def);
     generated.extend(main_struct);
     generated
 }

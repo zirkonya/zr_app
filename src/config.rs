@@ -25,10 +25,12 @@ where
 {
     let path: &Path = path.as_ref();
     if path.exists() {
-        let data = fs::read_to_string(path).expect(&format!(
-            "Error while parsing config file {}",
-            path.to_str().unwrap_or("NO FILE PATH")
-        ));
+        let data = fs::read_to_string(path).unwrap_or_else(|_| {
+            panic!(
+                "Error while parsing config file : {}",
+                path.to_str().unwrap_or("No file path")
+            )
+        });
         toml::from_str(&data).unwrap()
     } else {
         save_default_conf(path)

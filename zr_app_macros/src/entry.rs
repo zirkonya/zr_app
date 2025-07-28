@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{ItemFn, parse_macro_input, parse_quote};
@@ -24,10 +22,7 @@ pub(crate) fn config_builder(input: TokenStream) -> TokenStream {
 pub(crate) fn app(attr: TokenStream, input: TokenStream) -> TokenStream {
     let AppAttributes { conf, app_folder } = parse_macro_input!(attr as AppAttributes);
     let ItemFn {
-        attrs,
-        vis,
-        sig,
-        block,
+        vis, sig, block, ..
     } = syn::parse_macro_input!(input as ItemFn);
     let conf_file = format!(
         "{}/config.conf",
