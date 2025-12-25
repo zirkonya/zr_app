@@ -35,9 +35,9 @@ pub(crate) fn app(attr: TokenStream, input: TokenStream) -> TokenStream {
     quote! {
         #(#attrs)*
         #vis #sig {
+            let app_folder = #app_folder;
             std::fs::create_dir_all(#app_folder).unwrap();
             let config: #conf = zr_app::config::get_config(#conf_file);
-            println!("config get from {}", #conf_file);
             #block
         }
     }
